@@ -6,11 +6,13 @@
 #include <vector>
 #include <algorithm>
 #include <random>
+#include <iterator>
 
 #define DEBUG 0
 
 using namespace std;
 
+/*函数声明*/
 set<pair<char, char>> process_binary_relation(const string &input);
 set<char> getSet(const set<pair<char, char>> &relation);
 set<char> getSet(const string &input);
@@ -23,47 +25,43 @@ bool isAntiSymmetric(const std::set<std::pair<char, char>> &relation);
 bool isTransitive(const std::set<std::pair<char, char>> &relation);
 void judgeRelation(const set<pair<char, char>> &relation, const set<char> &set);
 bool isRelation(const string &input);
+void warshall(const set<pair<char, char>> &relation, const set<char> &s);
 
-void debug_test()
+void debug()
 {
     set<char> s{'1', '2', '3', '4'};
-    set<pair<char, char>> p{{'1', '1'}, {'1', '3'}, {'2', '2'}, {'3', '3'}, {'3', '1'}, {'3', '4'}, {'4', '3'}, {'4', '4'}};
-    auto reflexive = isReflexive(p, s);
-    auto antiReflexive = isAntiReflexive(p, s);
-    auto symmetric = isSymmetric(p);
-    auto antiSymmetric = isAntiSymmetric(p);
-    auto transitive = isTransitive(p);
-
-    cout << "自反性: " << (reflexive ? "满足" : "不满足") << endl;
-    cout << "反自反性: " << (antiReflexive ? "满足" : "不满足") << endl;
-    cout << "对称性: " << (symmetric ? "满足" : "不满足") << endl;
-    cout << "反对称性: " << (antiSymmetric ? "满足" : "不满足") << endl;
-    cout << "传递性: " << (transitive ? "满足" : "不满足") << endl;
+    auto p = makeRelation(s);
+    judgeRelation(p, s);
+    warshall(p, s);
 }
 
-/*输入二元关系：<a,b>, <b,c>, <c,d>*/
-/*输入集合：a,b,c,d*/
 int main()
 {
     if (DEBUG)
     {
-        debug_test();
+        debug();
         return 0;
     }
 
+    cout << "请输入具体的二元关系或者具体的集合: " << endl;
     string input;
     getline(cin, input);
     if(isRelation(input)) // 输入的是关系
     {
         auto relation = process_binary_relation(input);
         auto s = getSet(relation);
+        cout << "-----------------------------\n";
+        cout << "输入的关系为: " << endl;
+        printInfo(relation);
         judgeRelation(relation, s);
     }
     else  //输入的是集合
     {
-        cout << "this is a test" << endl;
         auto s = getSet(input);
         auto relation = makeRelation(s);
+        cout << "-----------------------------\n";
+        cout << "从给定集合中随机生成的关系: " << endl;
+        printInfo(relation);
         judgeRelation(relation, s);
     }
     return 0;
@@ -82,7 +80,7 @@ set<pair<char, char>> process_binary_relation(const string &input)
         {
             relationStack.push(op);
         }
-        else if (op == ',')
+        else if (op == ',' || op == '{' || op == '}' || op ==' ')
         {
         }
         else if (op == '>')
@@ -102,7 +100,7 @@ set<pair<char, char>> process_binary_relation(const string &input)
             relationStack.push(op);
         }
     }
-    printInfo(r);
+    //printInfo(r);
     return r;
 }
 
@@ -123,7 +121,7 @@ set<char> getSet(const string &input)
 {
     set<char> set;
     for(auto ch : input)
-        if(ch != ',')
+        if(ch != ',' && ch != '{' && ch != '}' && ch != ' ')
             set.insert(ch);
     return set;
 }
@@ -136,11 +134,20 @@ set<pair<char, char>> makeRelation(const set<char> &s)
     mt19937 gen(rd());
     auto n = s.size();
     uniform_int_distribution<unsigned> dis(1, n * n);
-    auto num = dis(gen); //生成关系的数量
+    uniform_int_distribution<unsigned> ndis(0, n-1);
+    auto num = dis(gen); // 生成关系的数量
+    auto it = s.begin();
+
+    //随机生成关系
     for (int i = 0; i < num; ++i)
     {
-
+        auto ele1 = next(it, ndis(gen));
+        auto ele2 = next(it, ndis(gen));
+        if(ele1 != s.end() && ele2 != s.end())
+            relation.insert(make_pair(*ele1, *ele2)); 
     }
+    //printInfo(relation);
+    return relation;
 }
 
 /*打印关系集合信息*/
@@ -238,4 +245,10 @@ bool isRelation(const string &input)
     //有<和>说明该输入为关系
     bool flag = find(input.begin(), input.end(), '<') != input.end() && find(input.begin(), input.end(), '>') != input.end();
     return flag;
+}
+
+/*Warshall算法*/
+void warshall(const set<pair<char, char>> &relation, const set<char> &s)
+{
+    //TODO:完成Warshall算法
 }
