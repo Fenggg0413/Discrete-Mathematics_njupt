@@ -1,3 +1,4 @@
+/*lab2: 输入可以是具体的二元关系，也可以给定一个具体的集合，随机生成一个二元关系，根据二元关系性质及对应的判定定理, 并求出该二元关系的传递闭包.*/
 #include <iostream>
 #include <utility>
 #include <set>
@@ -7,6 +8,7 @@
 #include <algorithm>
 #include <random>
 #include <iterator>
+#include <map>
 
 #define DEBUG 0
 
@@ -25,14 +27,35 @@ bool isAntiSymmetric(const std::set<std::pair<char, char>> &relation);
 bool isTransitive(const std::set<std::pair<char, char>> &relation);
 void judgeRelation(const set<pair<char, char>> &relation, const set<char> &set);
 bool isRelation(const string &input);
-void warshall(const set<pair<char, char>> &relation, const set<char> &s);
+vector<vector<int>> warshall(const set<pair<char, char>> &relation, const set<char> &s);
+vector<vector<int>> relationalMatrix(const set<pair<char, char>> &relation, const set<char> &s);
+set<pair<char, char>>
+transitiveClosure(const set<pair<char, char>> &relation, const set<char> &s);
 
 void debug()
 {
     set<char> s{'1', '2', '3', '4'};
-    auto p = makeRelation(s);
-    judgeRelation(p, s);
-    warshall(p, s);
+    auto r = makeRelation(s);
+    printInfo(r);
+    judgeRelation(r, s);
+    auto mat = relationalMatrix(r, s);
+    for (auto row : mat)
+    {
+        for (auto val : row)
+            cout << val << " ";
+        cout << '\n';
+    }
+    cout << endl;
+    auto mtr = warshall(r, s);
+    for (auto row : mtr)
+    {
+        for (auto val : row)
+            cout << val << " ";
+        cout << '\n';
+    }
+    cout << endl;
+    auto tr = transitiveClosure(r, s);
+    judgeRelation(tr, s);
 }
 
 int main()
@@ -46,7 +69,7 @@ int main()
     cout << "请输入具体的二元关系或者具体的集合: " << endl;
     string input;
     getline(cin, input);
-    if(isRelation(input)) // 输入的是关系
+    if (isRelation(input)) // 输入的是关系
     {
         auto relation = process_binary_relation(input);
         auto s = getSet(relation);
@@ -54,8 +77,19 @@ int main()
         cout << "输入的关系为: " << endl;
         printInfo(relation);
         judgeRelation(relation, s);
+        cout << "-----------------------------\n";
+        cout << "该二元关系的传递闭包为: \n";
+        auto mtr = warshall(relation, s);
+        for (auto row : mtr)
+        {
+            for (auto val : row)
+                cout << val << " ";
+            cout << '\n';
+        }
+        auto tr = transitiveClosure(relation, s);
+        printInfo(tr);
     }
-    else  //输入的是集合
+    else // 输入的是集合
     {
         auto s = getSet(input);
         auto relation = makeRelation(s);
@@ -63,6 +97,17 @@ int main()
         cout << "从给定集合中随机生成的关系: " << endl;
         printInfo(relation);
         judgeRelation(relation, s);
+        cout << "-----------------------------\n";
+        cout << "该二元关系的传递闭包为: \n";
+        auto mtr = warshall(relation, s);
+        for (auto row : mtr)
+        {
+            for (auto val : row)
+                cout << val << " ";
+            cout << '\n';
+        }
+        auto tr = transitiveClosure(relation, s);
+        printInfo(tr);
     }
     return 0;
 }
@@ -80,7 +125,7 @@ set<pair<char, char>> process_binary_relation(const string &input)
         {
             relationStack.push(op);
         }
-        else if (op == ',' || op == '{' || op == '}' || op ==' ')
+        else if (op == ',' || op == '{' || op == '}' || op == ' ')
         {
         }
         else if (op == '>')
@@ -100,7 +145,7 @@ set<pair<char, char>> process_binary_relation(const string &input)
             relationStack.push(op);
         }
     }
-    //printInfo(r);
+    // printInfo(r);
     return r;
 }
 
@@ -120,8 +165,8 @@ set<char> getSet(const set<pair<char, char>> &relation)
 set<char> getSet(const string &input)
 {
     set<char> set;
-    for(auto ch : input)
-        if(ch != ',' && ch != '{' && ch != '}' && ch != ' ')
+    for (auto ch : input)
+        if (ch != ',' && ch != '{' && ch != '}' && ch != ' ')
             set.insert(ch);
     return set;
 }
@@ -134,19 +179,19 @@ set<pair<char, char>> makeRelation(const set<char> &s)
     mt19937 gen(rd());
     auto n = s.size();
     uniform_int_distribution<unsigned> dis(1, n * n);
-    uniform_int_distribution<unsigned> ndis(0, n-1);
+    uniform_int_distribution<unsigned> ndis(0, n - 1);
     auto num = dis(gen); // 生成关系的数量
     auto it = s.begin();
 
-    //随机生成关系
+    // 随机生成关系
     for (int i = 0; i < num; ++i)
     {
         auto ele1 = next(it, ndis(gen));
         auto ele2 = next(it, ndis(gen));
-        if(ele1 != s.end() && ele2 != s.end())
-            relation.insert(make_pair(*ele1, *ele2)); 
+        if (ele1 != s.end() && ele2 != s.end())
+            relation.insert(make_pair(*ele1, *ele2));
     }
-    //printInfo(relation);
+    // printInfo(relation);
     return relation;
 }
 
@@ -242,13 +287,68 @@ void judgeRelation(const set<pair<char, char>> &relation, const set<char> &set)
 /*判断输入是否为关系*/
 bool isRelation(const string &input)
 {
-    //有<和>说明该输入为关系
+    // 有<和>说明该输入为关系
     bool flag = find(input.begin(), input.end(), '<') != input.end() && find(input.begin(), input.end(), '>') != input.end();
     return flag;
 }
 
-/*Warshall算法*/
-void warshall(const set<pair<char, char>> &relation, const set<char> &s)
+/*Warshall算法求传递闭包关系矩阵M(t(R))*/
+vector<vector<int>> warshall(const set<pair<char, char>> &relation, const set<char> &s)
 {
-    //TODO:完成Warshall算法
+    // 获取关系矩阵
+    auto mat = relationalMatrix(relation, s);
+    int n = s.size(); // 该矩阵的阶数
+    // Warshall算法
+    for (int i = 0; i < n; ++i)
+        for (int j = 0; j < n; ++j)
+            if (mat[j][i] == 1)
+                for (int k = 0; k < n; ++k)
+                {
+                    mat[j][k] += mat[i][k];
+                    // 关系矩阵不应该出现大于1的值
+                    if(mat[j][k] > 1)
+                        mat[j][k] = 1;
+                }
+    // 返回通过Warshall算法求出的传递闭包关系矩阵
+    return std::move(mat);
+}
+
+/*获取关系矩阵*/
+vector<vector<int>> relationalMatrix(const set<pair<char, char>> &relation, const set<char> &s)
+{
+    vector<vector<int>> mat;
+    map<char, int> m;
+    int count = 0;
+    for (auto ele : s)
+    {
+        m[ele] = count++; // 建立集合元素对应矩阵下标的映射
+        vector<int> row;
+        for (auto ele : s)
+            row.push_back(0);
+        mat.push_back(row);
+    }
+    // 对于每一对关系将其对应矩阵的值变为1
+    for (auto r : relation)
+        mat[m[r.first]][m[r.second]] = 1;
+    return std::move(mat); // 返回建立的关系矩阵
+}
+
+/*求给定二元关系的传递闭包*/
+set<pair<char, char>> 
+transitiveClosure(const set<pair<char, char>> &relation, const set<char> &s)
+{
+    map<int, char> m;
+    int count = 0;
+    set<pair<char, char>> tr; //传递闭包
+    for (auto ele : s)
+        m[count++] = ele; // 建立矩阵下标对应集合元素的映射
+    auto mtr = warshall(relation, s); // 获取传递闭包关系矩阵
+    auto n = s.size(); // 矩阵的阶数
+
+    // 遍历矩阵找到值为1的元素, 建立下标对应的关系
+    for (int i = 0; i < n; ++i)
+        for (int j = 0; j < n; ++j)
+            if(mtr[i][j] == 1)
+                tr.insert(make_pair(m[i], m[j]));
+    return tr;
 }
