@@ -20,7 +20,7 @@ auto lowerBound(const std::set<char> &s, const std::set<std::pair<char, char>> &
     -> char;
 auto uppperBound(const std::set<char> &s, const std::set<std::pair<char, char>> &relation)
     -> char;
-auto printInfo(const std::set<std::pair<char, char>> &relation) -> void;
+void printInfo(const std::set<std::pair<char, char>> &relation);
 auto isBoundedLattice(const std::set<char> &s, const std::set<std::pair<char, char>> &relation) -> bool;
 auto isComplementedLatticeconst(std::set<char> &s, const std::set<std::pair<char, char>> &relation) -> bool;
 
