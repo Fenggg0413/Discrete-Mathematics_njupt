@@ -8,7 +8,7 @@
 #include <stack>
 #include <algorithm>
 
-#define DEBUG 0
+#define DEBUG 1
 
 auto getRelation(const std::string &input) -> std::set<std::pair<char, char>>;
 auto getSet(const std::set<std::pair<char, char>> &relationSet) -> std::set<char>;
@@ -29,37 +29,39 @@ void debug()
     std::cout << "debug\n"
               << std::endl;
     std::set<std::pair<char, char>> relation_set{
-        {'a', 'a'},
-        {'a', 'b'},
-        {'a', 'c'},
-        {'a', 'd'},
-        {'a', 'e'},
-        {'b', 'b'},
-        {'b', 'c'},
-        {'b', 'e'},
-        {'c', 'c'},
-        {'c', 'e'},
-        {'d', 'd'},
-        {'d', 'd'},
-        {'d', 'e'},
-        {'e', 'e'}};
+        {'1', '2'},
+        {'1', '3'},
+        {'1', '4'},
+        {'1', '6'},
+        {'1', '9'},
+        {'2', '4'},
+        {'2', '6'},
+        {'2', '9'},
+        {'3', '6'},
+        {'3', '9'},
+        {'4', '9'},
+        {'6', '9'},
+    };
     printInfo(relation_set);
     auto s = getSet(relation_set);
     for (auto x : s)
         std::cout << x << " ";
     std::cout << std::endl;
     auto cov = getCOV(relation_set, s);
+    std::cout << "cov: " << std::endl;
     printInfo(cov);
     std::cout << uppperBound(s, relation_set) << std::endl;
     std::cout << lowerBound(s, relation_set) << std::endl;
-    std::cout << "b union d = " << upper('b', 'd', relation_set, s) << std::endl;
-    std::cout << "a union b = " << upper('a', 'b', relation_set, s) << std::endl;
-    std::cout << "a union e = " << upper('a', 'e', relation_set, s) << std::endl;
-    std::cout << "b intersect d = " << lower('b', 'd', relation_set, s) << std::endl;
-    std::cout << "c intersect e = " << lower('c', 'e', relation_set, s) << std::endl;
-    std::cout << "c intersect d = " << lower('c', 'd', relation_set, s) << std::endl;
-    if(isComplementedLatticeconst(s,relation_set))
-        std::cout << "此格为有补格\n";
+    std::cout << "4 union 2 = " << upper('4', '2', relation_set, s) << std::endl;
+    // std::cout << "a union b = " << upper('a', 'b', relation_set, s) << std::endl;
+    // std::cout << "a union e = " << upper('a', 'e', relation_set, s) << std::endl;
+    std::cout << "4 intersect 2 = " << lower('4', '2', relation_set, s) << std::endl;
+    // std::cout << "c intersect e = " << lower('c', 'e', relation_set, s) << std::endl;
+    // std::cout << "c intersect d = " << lower('c', 'd', relation_set, s) << std::endl;
+    if (isComplementedLatticeconst(s, relation_set))
+        std::cout << "此格是有补格\n";
+    else
+        std::cout << "此格不是有补格\n";
 }
 
 int main()
@@ -77,7 +79,7 @@ int main()
     auto cov = getCOV(relation_set, s);
     std::cout << "盖住关系: ";
     printInfo(cov);
-    if(isComplementedLatticeconst(s, relation_set))
+    if (isComplementedLatticeconst(s, relation_set))
         std::cout << "此格是有补格" << std::endl;
     else
         std::cout << "此格不是有补格" << std::endl;
@@ -163,6 +165,8 @@ auto lower(char c1, char c2, const std::set<std::pair<char, char>> &relation, co
 {
     if (relation.find({c1, c2}) != relation.end())
         return c1; // c1是下界
+    else if (relation.find({c2, c1}) != relation.end())
+        return c2;
     // 找到一个ret元素使得同时满足<ret, c1>, <ret, c2>,将结果存于一个最下界集,该集合应为原集合的子集
     std::set<char> lowerBounds;
     for (auto ret : s)
@@ -180,6 +184,8 @@ auto upper(char c1, char c2, const std::set<std::pair<char, char>> &relation, co
 {
     if (relation.find({c1, c2}) != relation.end())
         return c2; // c2是上界
+    else if (relation.find({c2, c1}) != relation.end())
+        return c1;
 
     // 找到一个ret元素使得同时满足<c1, ret>, <c2, ret>,将结果存于一个最上界集,该集合应为原集合的子集
     std::set<char> upperBounds;
@@ -245,15 +251,25 @@ auto isComplementedLatticeconst(std::set<char> &s, const std::set<std::pair<char
         return false;
     auto _1 = uppperBound(s, relation);
     auto _0 = lowerBound(s, relation);
+    if (DEBUG)
+        std::cout << "1 = " << _1 << ", 0 = " << _0 << std::endl;
     std::map<char, bool> complementeds; // 对每个元素是否有补元建立映射
+    for (auto ch : s)
+        complementeds[ch] = false; // 初始化complementeds映射
     for (auto a : s)
     {
         for (auto b : s)
+        {
             if (upper(a, b, relation, s) == _1 && lower(a, b, relation, s) == _0)
+            {
+                if (DEBUG)
+                    std::cout << "<" << a << "," << b << ">" << std::endl;
                 complementeds[a] = true;
+            }
+        }
     }
-    for(auto [ch, boolean] : complementeds)
-        if(!boolean)
+    for (auto [ch, boolean] : complementeds)
+        if (!boolean)
             return false;
     return true;
 }
