@@ -17,26 +17,29 @@ int countOddDegree(const std::vector<std::vector<int>> &adjMat);
 // 获取欧拉(回)路, 默认从0下标开始遍历
 std::vector<int> getEulerPath(const std::vector<std::vector<int>> &adjMat, int index = 0);
 // 获取所有(半)欧拉路
-std::vector<std::vector<int>> getAllPath
-(const std::vector<std::vector<int>> &adjMat, int edges, int begIndex = 0, int oddNums = 0);
+std::vector<std::vector<int>> getAllPath(const std::vector<std::vector<int>> &adjMat, int edges, int begIndex = 0, int oddNums = 0);
 // 打印路径
 void printPath(const std::vector<int> &path);
 
 int main()
 {
     int n, m;
+    std::cout << "请输入节点数量和边的数量: ";
     std::cin >> n >> m; // 用户输入节点和边的个数
     if (m > (n * (n - 1)) / 2)
-        throw("Exceeded the maximum allowed number of edges.");
+    {
+        std::cout << "输入的边的数量大于最大可拥有的边的数量!" << std::endl;
+        exit(-1);
+    }
     auto adjMat = getAdjMat(n, m);
     if (isConnected(adjMat))
     {
         auto oddNums = countOddDegree(adjMat);
         if (oddNums == 0) // 欧拉图
         {
-            std::cout << "This graph is Euler graph\n";
+            std::cout << "该图是欧拉图\n";
             int choice = 0;
-            std::cout << "Please select to print \n1. one Euler path   2. all Euler paths.\n";
+            std::cout << "请选择要打印的信息 \n1. 一条欧拉回路   2. 所有欧拉回路\n";
             std::cin >> choice;
             if (choice == 1)
             {
@@ -51,15 +54,15 @@ int main()
             }
             else
             {
-                std::cout << "No such option!" << std::endl;
+                std::cout << "没有该选项!" << std::endl;
             }
         }
         else if (oddNums == 2) // 半欧拉图
         {
             auto oddDegree = getOddDegree(adjMat);
-            std::cout << "This graph is Euler graph\n";
+            std::cout << "该图是半欧拉图\n";
             int choice = 0;
-            std::cout << "Please select to print \n1. one Euler path   2. all Euler paths.\n";
+            std::cout << "请选择要打印的信息 \n1. 一条欧拉路   2. 所有欧拉路\n";
             std::cin >> choice;
             if (choice == 1)
             {
@@ -74,17 +77,17 @@ int main()
             }
             else
             {
-                std::cout << "No such option!" << std::endl;
+                std::cout << "没有该选项!" << std::endl;
             }
         }
         else
         {
-            std::cout << "This graph is not Euler graph or Semi-Eulerian graph" << std::endl;
+            std::cout << "该不是欧拉图或半欧拉图" << std::endl;
         }
     }
     else
     {
-        std::cout << "This graph is not connected" << std::endl;
+        std::cout << "该图是不连通的！" << std::endl;
     }
     return 0;
 }
@@ -174,7 +177,7 @@ int countOddDegree(const std::vector<std::vector<int>> &adjMat)
 }
 
 // 获取欧拉(回)路, 默认从0下标开始遍历
-std::vector<int> getEulerPath(const std::vector<std::vector<int>> &adjMat, int index = 0)
+std::vector<int> getEulerPath(const std::vector<std::vector<int>> &adjMat, int index)
 {
     std::vector<int> path;
     int nsize = adjMat.size();
@@ -198,7 +201,7 @@ std::vector<int> getEulerPath(const std::vector<std::vector<int>> &adjMat, int i
 
 // 获取所有(半)欧拉路
 std::vector<std::vector<int>>
-getAllPath(const std::vector<std::vector<int>> &adjMat, int edges, int begIndex = 0, int oddNums = 0)
+getAllPath(const std::vector<std::vector<int>> &adjMat, int edges, int begIndex, int oddNums)
 {
     int nsize = adjMat.size();
     auto mat(adjMat);
