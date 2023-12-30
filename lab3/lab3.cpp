@@ -8,7 +8,7 @@
 #include <stack>
 #include <algorithm>
 
-#define DEBUG 1
+#define DEBUG 0
 
 auto getRelation(const std::string &input) -> std::set<std::pair<char, char>>;
 auto getSet(const std::set<std::pair<char, char>> &relationSet) -> std::set<char>;
