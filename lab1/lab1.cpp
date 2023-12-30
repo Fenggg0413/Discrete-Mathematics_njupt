@@ -37,9 +37,9 @@ int main()
     // 获得命题变元
     auto propVar = getPropVar(formula);
     int numVariables = propVar.size();
-    cout << "test -- numVariables: " << numVariables << endl;
-    cout << "test -- infix to postfix: " << infixToPostfix(formula) << endl;
-
+    // cout << "test -- numVariables: " << numVariables << endl;
+    // cout << "test -- infix to postfix: " << infixToPostfix(formula) << endl;
+    std::cout << "真值表:\n";
     // 生成真值表
     vector<vector<bool>> truthValues;
     // n个命题变元对应2*n个取值的可能性
@@ -79,8 +79,10 @@ int main()
             enf.push_back(count);
         ++count;
     }
-    cout << "主析取范式: " << getDNF(ent, truthValues, propVar) << endl;
-    cout << "主合取范式: " << getCNF(enf, truthValues, propVar) << endl;
+    auto dnf = getDNF(ent, truthValues, propVar);
+    auto cnf = getCNF(enf, truthValues, propVar);
+    cout << "主析取范式: " << (dnf.empty() ? "不存在主析取范式" : dnf)<< endl;
+    cout << "主合取范式: " << (cnf.empty() ? "不存在主合取范式" : cnf) << endl;
     return 0;
 }
 
